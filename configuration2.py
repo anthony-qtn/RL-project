@@ -14,6 +14,7 @@ config_dict = {
     "observation": {
         "type": "Kinematics",  # Set to Kinematics to use kinematic-based observation
         "features": ["x", "y", "vx", "vy"],  # Use only position and velocity features
+        "vehicles_count": 4,  # Number of vehicles to observe
         "as_image": False,  # If you prefer the observation as a vector, not an image
         "align_to_vehicle_axes": True,  # Align observation to vehicle's local axes
     },
@@ -29,7 +30,7 @@ config_dict = {
     "lane_centering_cost": 4,  # Cost for not staying centered in the lane
     "action_reward": -0.3,  # Penalty for each action taken
     "controlled_vehicles": 1,  # Number of vehicles controlled by the agent
-    "other_vehicles": 1,  # Number of other vehicles
+    "other_vehicles": 3,  # Number of other vehicles
     "screen_width": 600,  # Width of the screen for visualization
     "screen_height": 600,  # Height of the screen for visualization
     "centering_position": [0.5, 0.5],  # Position of the vehicle in the screen
@@ -59,3 +60,13 @@ states = env.observation_space
 # Print action and observation spaces
 print("Action Space:", actions)
 print("Observation Space:", states)
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+for _ in range(100):
+    obs, reward, done, truncated, info = env.step(np.array([0.5, 0.5]))
+    env.render()
+
+plt.imshow(env.render())
+plt.show()
