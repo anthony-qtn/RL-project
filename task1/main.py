@@ -10,7 +10,6 @@ import gymnasium as gym
 import highway_env  # noqa: F401
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 import mlflow
 
 LOGGING = False
@@ -70,7 +69,7 @@ config_dict = {
 }
 
 env = gym.make("highway-fast-v0", render_mode="rgb_array")
-env.unwrapped.configure(config_dict)
+env.unwrapped.configure(config_dict) # type: ignore
 obs, _ = env.reset()
 
 actions = env.action_space
@@ -84,25 +83,10 @@ if LOGGING:
 
 obs, _ = env.reset()
 
-for _ in range(100):
-    action = 1
-    obs, reward, done, truncated, info = env.step(action)  # Pass an integer, not an array
-    env.render()
+def visualize_env(env, steps=100, action=1):
+    for _ in range(steps):
+        action = action
+        obs, reward, done, truncated, info = env.step(action)  # Pass an integer, not an array
+        env.render()
 
-class ReplayBuffer:
-    def __init__(self, capacity=100):
-        self.capacity = capacity
-        self.position = 0
-        self.memory = []
-
-    def add(self, s, a, r, sprime, aprime):
-        if len(self.memory) < self.capacity:
-            self.memory.append(None)
-        self.memory[self.position] = (s, a, r, sprime, aprime)
-        self.position = (self.position + 1) % self.capacity
-
-    def sample(self, batch_size):
-        return random.choices(self.memory, k=batch_size)
-    
-    def __len__(self):
-        return len(self.memory)
+visualize_env(env)
