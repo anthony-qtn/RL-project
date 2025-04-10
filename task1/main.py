@@ -11,12 +11,23 @@ import highway_env  # noqa: F401
 import matplotlib.pyplot as plt
 import numpy as np
 import mlflow
+from copy import deepcopy
+from dqn import DQN
 
 LOGGING = False
 
 hyperparameters = {
-    "epsilon": 0.05,
-
+    "gamma": 0.99,
+    "batch_size": 1,
+    "buffer_capacity": 1,
+    "update_target_every": 2,
+    "epsilon_start": 0.9,
+    "decrease_epsilon_factor": 1000,
+    "epsilon_min": 0.05,
+    "learning_rate": 1e-1,
+    "N_episodes": 10,
+    "hidden_size": 128,
+    "eval_every": 2,
 }
 
 if LOGGING:
@@ -78,15 +89,88 @@ states = env.observation_space
 print("Action Space:", actions)
 print("Observation Space:", states)
 
-if LOGGING:
-    mlflow.end_run()
-
 obs, _ = env.reset()
 
-def visualize_env(env, steps=100, action=1):
+def visualize_env_constant_action(env, steps=100, action=1):
+    _, _ = env.reset()
     for _ in range(steps):
         action = action
         obs, reward, done, truncated, info = env.step(action)  # Pass an integer, not an array
+        print("reward:", reward)
         env.render()
 
-visualize_env(env)
+def visualize_env_agent(env, agent, steps=100):
+    obs, _ = env.reset()
+    for _ in range(steps):
+        action = agent.get_optimal_action(obs)
+        obs, reward, done, truncated, info = env.step(action)
+        env.render()
+
+def eval_agent(agent: DQN, env, n_sim=5) -> np.ndarray:
+    """
+    ** Solution **
+    
+    Monte Carlo evaluation of DQN agent.
+
+    Repeat n_sim times:
+        * Run the DQN policy until the environment reaches a terminal state (= one episode)
+        * Compute the sum of rewards in this episode
+        * Store the sum of rewards in the episode_rewards array.
+    """
+    env_copy = deepcopy(env)
+    episode_rewards = np.zeros(n_sim)
+    for i in range(n_sim):
+        state, _ = env_copy.reset()
+        reward_sum = 0
+        done = False
+        while not done: 
+            action = agent.get_action(state, 0)
+            state, reward, terminated, truncated, _ = env_copy.step(action)
+            reward_sum += reward
+            done = terminated or truncated
+        episode_rewards[i] = reward_sum
+    return episode_rewards
+
+agent = DQN(action_space = env.action_space,
+             observation_space = env.observation_space,
+             gamma = hyperparameters["gamma"],
+             batch_size = hyperparameters["batch_size"],
+             buffer_capacity = hyperparameters["buffer_capacity"],
+             update_target_every = hyperparameters["update_target_every"],
+             epsilon_start = hyperparameters["epsilon_start"],
+             decrease_epsilon_factor = hyperparameters["decrease_epsilon_factor"],
+             epsilon_min = hyperparameters["epsilon_min"],
+             learning_rate = hyperparameters["learning_rate"],
+             hidden_size = hyperparameters["hidden_size"],
+             )
+
+def train_agent(agent:DQN, env, N_episodes = hyperparameters["N_episodes"], eval_every = hyperparameters["eval_every"]) -> tuple[list[float], list[float]]:
+    mean_rewards = []
+    losses = []
+    for episode in range(N_episodes):
+        state, _ = env.reset()
+        done = False
+        while not done:
+            action = agent.get_action(state)
+            next_state, reward, terminated, truncated, _ = env.step(action)
+            loss = agent.update(state, action, reward, done, next_state)
+            state = next_state
+            if loss is not None:
+                losses.append(loss)
+
+            done = terminated or truncated
+
+        if episode % eval_every == 0:
+            episode_rewards = eval_agent(agent, env, n_sim=5)
+            mean_reward = np.mean(episode_rewards)
+            print(f"Episode {episode}: {mean_reward:.2f}")
+            mean_rewards.append(mean_reward)
+
+    return mean_rewards, losses
+
+mean_rewards, losses = train_agent(agent, env, N_episodes=hyperparameters["N_episodes"], eval_every=hyperparameters["eval_every"])
+print("Mean rewards:", mean_rewards)
+print("Losses:", losses)
+
+if LOGGING:
+    mlflow.end_run()
