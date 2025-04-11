@@ -13,21 +13,22 @@ import numpy as np
 import mlflow
 from copy import deepcopy
 from dqn import DQN
+import time
 
-LOGGING = False
+LOGGING = True
 
 hyperparameters = {
     "gamma": 0.99,
-    "batch_size": 1,
-    "buffer_capacity": 1,
-    "update_target_every": 2,
+    "batch_size": 64,
+    "buffer_capacity": 1000,
+    "update_target_every": 10,
     "epsilon_start": 0.9,
-    "decrease_epsilon_factor": 1000,
+    "decrease_epsilon_factor": 2000,
     "epsilon_min": 0.05,
     "learning_rate": 1e-1,
-    "N_episodes": 10,
+    "N_episodes": 1200,
     "hidden_size": 128,
-    "eval_every": 2,
+    "eval_every": 10,
 }
 
 if LOGGING:
@@ -144,9 +145,10 @@ agent = DQN(action_space = env.action_space,
              hidden_size = hyperparameters["hidden_size"],
              )
 
-def train_agent(agent:DQN, env, N_episodes = hyperparameters["N_episodes"], eval_every = hyperparameters["eval_every"]) -> tuple[list[float], list[float]]:
+def train_agent(agent:DQN, env, N_episodes = hyperparameters["N_episodes"], eval_every = hyperparameters["eval_every"], timeit = True) -> tuple[list[float], list[float]]:
     mean_rewards = []
     losses = []
+    t0 = time.time()
     for episode in range(N_episodes):
         state, _ = env.reset()
         done = False
@@ -163,14 +165,22 @@ def train_agent(agent:DQN, env, N_episodes = hyperparameters["N_episodes"], eval
         if episode % eval_every == 0:
             episode_rewards = eval_agent(agent, env, n_sim=5)
             mean_reward = np.mean(episode_rewards)
-            print(f"Episode {episode}: {mean_reward:.2f}")
+            if LOGGING:
+                mlflow.log_metric("mean_reward", float(mean_reward), step=episode)
+                mlflow.log_metric("epsilon", agent.epsilon, step=episode)
             mean_rewards.append(mean_reward)
+
+    if timeit:
+        t1 = time.time()
+        fulltime = t1 - t0
+        time_per_episode = fulltime / N_episodes
+        print(f"Time per episode: {time_per_episode}")
 
     return mean_rewards, losses
 
 mean_rewards, losses = train_agent(agent, env, N_episodes=hyperparameters["N_episodes"], eval_every=hyperparameters["eval_every"])
-print("Mean rewards:", mean_rewards)
-print("Losses:", losses)
+
+agent.save_model(path = "task1/models/test1.pt")
 
 if LOGGING:
     mlflow.end_run()
