@@ -18,21 +18,22 @@ import time
 LOGGING = True
 
 hyperparameters = {
-    "gamma": 0.99,
-    "batch_size": 64,
-    "buffer_capacity": 1000,
-    "update_target_every": 10,
+    "gamma": 0.95,
+    "batch_size": 32,
+    "buffer_capacity": 15000,
+    "update_target_every": 50,
     "epsilon_start": 0.9,
-    "decrease_epsilon_factor": 2000,
+    "decrease_epsilon_factor": 4000,
     "epsilon_min": 0.05,
-    "learning_rate": 1e-1,
-    "N_episodes": 1200,
+    "learning_rate": 5e-4,
+    "N_episodes": 1000,
     "hidden_size": 128,
     "eval_every": 10,
 }
 
 if LOGGING:
     mlflow.start_run()
+    mlflow.set_tag("step_represents", "episode")
     mlflow.log_params(hyperparameters)
 
 config_dict = {
@@ -80,6 +81,37 @@ config_dict = {
     "disable_collision_checks": True,
 }
 
+"""
+config_dict = {'action': {'type': 'DiscreteMetaAction'},
+ 'centering_position': [0.3, 0.5],
+ 'collision_reward': -1,
+ 'controlled_vehicles': 1,
+ 'duration': 40,
+ 'ego_spacing': 2,
+ 'high_speed_reward': 0.4,
+ 'initial_lane_id': None,
+ 'lane_change_reward': 0,
+ 'lanes_count': 4,
+ 'manual_control': False,
+ 'normalize_reward': True,
+ 'observation': {'type': 'Kinematics'},
+ 'offroad_terminal': False,
+ 'offscreen_rendering': True,
+ 'other_vehicles_type': 'highway_env.vehicle.behavior.IDMVehicle',
+ 'policy_frequency': 1,
+ 'real_time_rendering': False,
+ 'render_agent': True,
+ 'reward_speed_range': [20, 30],
+ 'right_lane_reward': 0.1,
+ 'scaling': 5.5,
+ 'screen_height': 150,
+ 'screen_width': 600,
+ 'show_trajectories': False,
+ 'simulation_frequency': 15,
+ 'vehicles_count': 50,
+ 'vehicles_density': 1}
+ """
+
 env = gym.make("highway-fast-v0", render_mode="rgb_array")
 env.unwrapped.configure(config_dict) # type: ignore
 obs, _ = env.reset()
@@ -92,19 +124,23 @@ print("Observation Space:", states)
 
 obs, _ = env.reset()
 
-def visualize_env_constant_action(env, steps=100, action=1):
+def visualize_env_constant_action(env, action=1):
     _, _ = env.reset()
-    for _ in range(steps):
+    done = False
+    while not done:
         action = action
-        obs, reward, done, truncated, info = env.step(action)  # Pass an integer, not an array
+        obs, reward, terminated, truncated, info = env.step(action)  # Pass an integer, not an array
+        done = terminated or truncated
         print("reward:", reward)
         env.render()
 
-def visualize_env_agent(env, agent, steps=100):
+def visualize_env_agent(env, agent):
     obs, _ = env.reset()
-    for _ in range(steps):
+    done = False
+    while not done :
         action = agent.get_optimal_action(obs)
-        obs, reward, done, truncated, info = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(action)
+        done = terminated or truncated
         env.render()
 
 def eval_agent(agent: DQN, env, n_sim=5) -> np.ndarray:
@@ -152,13 +188,15 @@ def train_agent(agent:DQN, env, N_episodes = hyperparameters["N_episodes"], eval
     for episode in range(N_episodes):
         state, _ = env.reset()
         done = False
+        episode_loss = 0
+        example = (0, 0, 0, 0, 0)
         while not done:
             action = agent.get_action(state)
             next_state, reward, terminated, truncated, _ = env.step(action)
             loss = agent.update(state, action, reward, done, next_state)
             state = next_state
             if loss is not None:
-                losses.append(loss)
+                episode_loss += loss
 
             done = terminated or truncated
 
@@ -168,7 +206,10 @@ def train_agent(agent:DQN, env, N_episodes = hyperparameters["N_episodes"], eval
             if LOGGING:
                 mlflow.log_metric("mean_reward", float(mean_reward), step=episode)
                 mlflow.log_metric("epsilon", agent.epsilon, step=episode)
+                mlflow.log_metric("loss", float(episode_loss), step=episode)
             mean_rewards.append(mean_reward)
+            losses.append(episode_loss)
+
 
     if timeit:
         t1 = time.time()
@@ -180,7 +221,10 @@ def train_agent(agent:DQN, env, N_episodes = hyperparameters["N_episodes"], eval
 
 mean_rewards, losses = train_agent(agent, env, N_episodes=hyperparameters["N_episodes"], eval_every=hyperparameters["eval_every"])
 
-agent.save_model(path = "task1/models/test1.pt")
+agent.save_model(path = "task1/models/model3.pt")
+#agent.load_model(path = "task1/models/model3.pt")
+#visualize_env_agent(env, agent)
+#print(eval_agent(agent, env, n_sim=5))
 
 if LOGGING:
     mlflow.end_run()
