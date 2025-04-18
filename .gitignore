@@ -177,3 +177,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# venv
+envRL/
+
+# logging
+mlruns/
+
+config.pkl
+config2.pkl
+config3.pkl
