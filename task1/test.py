@@ -55,4 +55,4 @@ print("evaluating model at ", model_path)
 
 agent.load_model(path = model_path)
 visualize_env_agent(env, agent)
-print(eval_agent(agent, env, n_sim=10))
+#print(eval_agent(agent, env, n_sim=10))

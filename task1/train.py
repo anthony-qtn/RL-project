@@ -28,7 +28,7 @@ hyperparameters = {
     "decrease_epsilon_factor": 4000,
     "epsilon_min": 0.05,
     "learning_rate": 5e-4,
-    "N_episodes": 6000,
+    "N_episodes": 4000,
     "hidden_size": 128,
     "eval_every": 10,
 }
@@ -117,10 +117,14 @@ if __name__ == "__main__":
              learning_rate = hyperparameters["learning_rate"],
              hidden_size = hyperparameters["hidden_size"],
              )
+    
+    get_next_model_path = get_next_model_path()
+
+    print("Training agent, to be saved in ", get_next_model_path)
 
     mean_rewards, losses = train_agent(agent, env, N_episodes=hyperparameters["N_episodes"], eval_every=hyperparameters["eval_every"])
 
-    agent.save_model(path = get_next_model_path())
+    agent.save_model(path = get_next_model_path)
 
     if LOGGING:
         mlflow.end_run()
