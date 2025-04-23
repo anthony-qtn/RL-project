@@ -6,8 +6,8 @@ Anthony QUENTIN
 """
 
 import pickle
-import gymnasium as gym
-import highway_env  # noqa: F401
+
+from utils import make_env
 
 # Define configuration for merge-v0 using kinematics observations
 config_dict = {
@@ -45,14 +45,9 @@ config_dict = {
 with open("config3.pkl", "wb") as f:
     pickle.dump(config_dict, f)
 
-# Create and configure the merge environment with render_mode "rgb_array"
-env = gym.make("merge-v0", render_mode="rgb_array")
-env.unwrapped.configure(config_dict)
+env = make_env(task_idx=3)
 
-# Reset the environment to apply the configuration
 obs, _ = env.reset()
 print(obs)
-
-# Print action and observation spaces for debugging
 print("Action Space:", env.action_space)
 print("Observation Space:", env.observation_space)

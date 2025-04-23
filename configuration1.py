@@ -6,8 +6,8 @@ Anthony QUENTIN
 """
 
 import pickle
-import gymnasium as gym
-import highway_env  # noqa: F401
+
+from utils import make_env
 
 
 config_dict = {
@@ -59,40 +59,9 @@ config_dict = {
 with open("config2.pkl", "wb") as f:
     pickle.dump(config_dict, f)
 
-# Create and configure the environment
-env = gym.make("highway-fast-v0", render_mode="rgb_array")
+env = make_env(task_idx=1)
 
-env.unwrapped.configure(config_dict)
-
-# Reset the environment to apply the config
 obs, _ = env.reset()
-
-# Check the action and observation spaces
-actions = env.action_space
-states = env.observation_space
-
-# Print action and observation spaces
-print("Action Space:", actions)
-print("Observation Space:", states)
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-# Reset the environment
-obs, _ = env.reset()
-
-# Run simulation with discrete actions
-import time
-for _ in range(100):
-    action = 1
-    obs, reward, done, truncated, info = env.step(action)  # Pass an integer, not an array
-    env.render()
-
-# Display the last rendered frame
-plt.imshow(env.render())
-plt.axis('off')  # Hide axes for cleaner visualization
-plt.show()
-
-
-
-
+print(obs)
+print("Action Space:", env.action_space)
+print("Observation Space:", env.observation_space)

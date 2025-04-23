@@ -5,18 +5,13 @@ Aymeric CONTI
 Anthony QUENTIN
 """
 
-import pickle
-import gymnasium as gym
-import highway_env  # noqa: F401
-import matplotlib.pyplot as plt
-import numpy as np
 import mlflow
+from utils import make_env
 
 LOGGING = False
 
 hyperparameters = {
     "epsilon": 0.05,
-
 }
 
 if LOGGING:
@@ -68,8 +63,7 @@ config_dict = {
     "disable_collision_checks": True,
 }
 
-env = gym.make("highway-fast-v0", render_mode="rgb_array")
-env.unwrapped.configure(config_dict) # type: ignore
+env = make_env(task_idx=1)
 obs, _ = env.reset()
 
 actions = env.action_space
@@ -83,10 +77,14 @@ if LOGGING:
 
 obs, _ = env.reset()
 
+
 def visualize_env(env, steps=100, action=1):
     for _ in range(steps):
         action = action
-        obs, reward, done, truncated, info = env.step(action)  # Pass an integer, not an array
+        obs, reward, done, truncated, info = env.step(
+            action
+        )  # Pass an integer, not an array
         env.render()
+
 
 visualize_env(env)

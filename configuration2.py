@@ -6,14 +6,21 @@ Anthony QUENTIN
 """
 
 import pickle
-import gymnasium as gym
-import highway_env  # noqa: F401
+
+from utils import make_env
 
 
 config_dict = {
     "observation": {
         "type": "Kinematics",  # Set to Kinematics to use kinematic-based observation
-        "features": ["x", "y", "vx", "vy"],  # Use only position and velocity features
+        "features": [
+            "x",
+            "y",
+            "vx",
+            "vy",
+            "lat_off",
+            "ang_off",
+        ],  # Use only position and velocity features
         "vehicles_count": 4,  # Number of vehicles to observe
         "as_image": False,  # If you prefer the observation as a vector, not an image
         "align_to_vehicle_axes": True,  # Align observation to vehicle's local axes
@@ -27,8 +34,10 @@ config_dict = {
     "policy_frequency": 4,  # Hz
     "duration": 60,  # Duration of the simulation in seconds
     "collision_reward": -1,  # Reward for collision
-    "lane_centering_cost": 4,  # Cost for not staying centered in the lane
+    "lane_centering_cost": 1,  # Cost for not staying centered in the lane
     "action_reward": -0.3,  # Penalty for each action taken
+    "high_speed_reward": 1.0,  # The reward received when driving at full speed, linearly mapped to zero for
+    "reward_speed_range": [20, 30],
     "controlled_vehicles": 1,  # Number of vehicles controlled by the agent
     "other_vehicles": 3,  # Number of other vehicles
     "screen_width": 600,  # Width of the screen for visualization
@@ -41,32 +50,12 @@ config_dict = {
 }
 
 # Save the config to a file
-with open("config2.pkl", "wb") as f:
+with open("configs/config2.pkl", "wb") as f:
     pickle.dump(config_dict, f)
 
-# Create and configure the environment
-env = gym.make("racetrack-v0", render_mode="rgb_array")
+env = make_env(task_idx=2)
 
-env.unwrapped.configure(config_dict)
-
-# Reset the environment to apply the config
 obs, _ = env.reset()
 print(obs)
-
-# Check the action and observation spaces
-actions = env.action_space
-states = env.observation_space
-
-# Print action and observation spaces
-print("Action Space:", actions)
-print("Observation Space:", states)
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-for _ in range(100):
-    obs, reward, done, truncated, info = env.step(np.array([0.5, 0.5]))
-    env.render()
-
-plt.imshow(env.render())
-plt.show()
+print("Action Space:", env.action_space)
+print("Observation Space:", env.observation_space)
