@@ -52,6 +52,7 @@ class DQN:
                 epsilon_min,
                 learning_rate,
                 hidden_size,
+                **kwargs
                 ): 
         self.action_space = action_space
         self.observation_space = observation_space

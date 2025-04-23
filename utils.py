@@ -21,3 +21,13 @@ def visualize_random(env: gym.Env, steps: int = 100):
         env.step(env.action_space.sample())
         env.render()
     env.close()
+
+
+def visualize_env_agent(env: gym.Env, agent):
+    obs, _ = env.reset()
+    done = False
+    while not done:
+        action = agent.get_optimal_action(obs)
+        obs, reward, terminated, truncated, info = env.step(action)
+        done = terminated or truncated
+        env.render()

@@ -8,7 +8,7 @@ import wandb
 from collections import deque
 from tqdm import tqdm
 
-from utils import make_env
+from utils import make_env, visualize_env_agent
 
 
 STATE_DIM = 6 * 4  # (x, y, vx, vy, latt_off, ang_off) * 4 cars
@@ -54,6 +54,13 @@ class Actor(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x.flatten(start_dim=1))
 
+    def get_optimal_action(self, obs, gaussian=True) -> torch.Tensor:
+        obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
+        action = self.forward(obs_tensor).detach().numpy()[0]
+        if gaussian:
+            action += EXPL_NOISE * np.random.randn(2)
+        return np.clip(action, -1, 1)
+
 
 class Critic(nn.Module):
     def __init__(self):
@@ -75,7 +82,7 @@ def soft_update(target: nn.Module, source: nn.Module):
         tp.data.copy_(TAU * sp.data + (1 - TAU) * tp.data)
 
 
-def train(
+def train_one_epoch(
     buffer: ReplayBuffer,
     actor: Actor,
     actor_target: Actor,
@@ -108,7 +115,7 @@ def train(
     return actor_loss, critic_loss
 
 
-def loop():
+def train():
     env = make_env(task_idx=2)
 
     actor = Actor()
@@ -146,10 +153,7 @@ def loop():
         episode_critic_loss = 0
 
         for _ in range(200):
-            state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-            action = actor(state_tensor).detach().numpy()[0]
-            action += EXPL_NOISE * np.random.randn(2)
-            action = np.clip(action, -1, 1)
+            action = actor.get_optimal_action(state)
 
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
@@ -158,7 +162,7 @@ def loop():
             episode_reward += float(reward)
 
             if len(buffer) > BATCH_SIZE:
-                actor_loss, critic_loss = train(
+                actor_loss, critic_loss = train_one_epoch(
                     buffer,
                     actor,
                     actor_target,
@@ -192,27 +196,13 @@ def loop():
 def test():
     env = make_env(task_idx=2)
     actor = Actor()
-    actor.load_state_dict(torch.load("task2/actor.pth"))
+    actor.load_state_dict(torch.load("task2/saved/actor.pth"))
 
-    state = env.reset()[0]
-    for _ in range(200):
-        state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
-        action = actor(state_tensor).detach().numpy()[0]
-        action += EXPL_NOISE * np.random.randn(2)
-        action = np.clip(action, -1, 1)
-
-        next_state, reward, terminated, truncated, _ = env.step(action)
-        done = terminated or truncated
-        state = next_state
-
-        env.render()
-
-        if done:
-            break
+    visualize_env_agent(env, actor)
 
     env.close()
 
 
 if __name__ == "__main__":
-    # loop()
+    # train()
     test()
