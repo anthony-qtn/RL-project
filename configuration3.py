@@ -42,7 +42,7 @@ config_dict = {
 }
 
 # Save the config to a file (optional)
-with open("config3.pkl", "wb") as f:
+with open("configs/config3.pkl", "wb") as f:
     pickle.dump(config_dict, f)
 
 env = make_env(task_idx=3)

@@ -1,4 +1,12 @@
+"""
+Groupe :
+Pierre JOURDIN
+Aymeric CONTI
+Anthony QUENTIN
+"""
+
 import highway_env  # noqa: F401
+import os
 import pickle
 import gymnasium as gym
 
@@ -8,6 +16,12 @@ def make_env(*, task_idx: int) -> gym.Env:
     assert 1 <= task_idx <= 3, f"task_idx should be between 1 and 3 not {task_idx}"
 
     env = gym.make(names[task_idx - 1], render_mode="rgb_array")
+
+    assert os.path.exists(f"configs/config{task_idx}.pkl"), (
+        f"Config file for task {task_idx} not found. You should add your config inside the configs folder "
+        f"with the name config{task_idx}.pkl"
+    )
+
     with open(f"configs/config{task_idx}.pkl", "rb") as f:
         config_dict = pickle.load(f)
         env.unwrapped.configure(config_dict)  # type: ignore

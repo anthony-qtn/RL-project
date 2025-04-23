@@ -1,3 +1,10 @@
+"""
+Groupe :
+Pierre JOURDIN
+Aymeric CONTI
+Anthony QUENTIN
+"""
+
 import numpy as np
 import torch
 import torch.nn as nn
