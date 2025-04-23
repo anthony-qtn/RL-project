@@ -190,3 +190,6 @@ mlruns/
 config.pkl
 config2.pkl
 config3.pkl
+
+#models
+task1/models/
