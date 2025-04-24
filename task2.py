@@ -15,7 +15,7 @@ import wandb
 from collections import deque
 from tqdm import tqdm
 
-from utils import make_env, visualize_env_agent
+from utils import make_env, visualize
 
 
 STATE_DIM = 6 * 4  # (x, y, vx, vy, latt_off, ang_off) * 4 cars
@@ -201,13 +201,10 @@ def train():
 
 
 def test():
-    env = make_env(task_idx=2)
     actor = Actor()
     actor.load_state_dict(torch.load("task2/saved/actor.pth"))
 
-    visualize_env_agent(env, actor)
-
-    env.close()
+    visualize(actor, task_idx=2, create_gif=True)
 
 
 if __name__ == "__main__":

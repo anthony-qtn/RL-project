@@ -11,7 +11,7 @@ from copy import deepcopy
 from task1.dqn import DQN
 from task1.save import get_latest_model_path, get_next_model_path
 import time
-from utils import make_env, visualize_env_agent
+from utils import make_env, visualize
 
 LOGGING = True
 
@@ -134,7 +134,7 @@ def test():
     model_path = get_latest_model_path()
     print("evaluating model at ", model_path)
     agent.load_model(path=model_path)
-    visualize_env_agent(env, agent)
+    visualize(agent, task_idx=1)
 
 
 if __name__ == "__main__":
