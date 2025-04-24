@@ -11,8 +11,8 @@ TASK_IDX = 3  # merge-v0
 N_CPUS = 6
 BATCH_SIZE = 64
 TOTAL_TIMESTEPS = int(2e5)
-MODEL_DIR = "highway_merge_ppo"
-MODEL_PATH = os.path.join(MODEL_DIR, "model_4")
+MODEL_DIR = "task3"
+MODEL_PATH = os.path.join(MODEL_DIR, "model")
 TENSORBOARD_LOGDIR = MODEL_DIR
 
 
@@ -70,4 +70,8 @@ class PPOAgentWrapper:
 # ========== Main ==========
 if __name__ == "__main__":
     # train()
-    test()
+    for _ in range(5):
+        test()
+
+    # agent = PPOAgentWrapper(PPO.load(MODEL_PATH))
+    # visualize(agent, task_idx=TASK_IDX, create_gif=True, gif_file="highway_merge_ppo/simulation.gif")
