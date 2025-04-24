@@ -1,14 +1,10 @@
 import os
-import gymnasium as gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv
-from stable_baselines3.common.env_util import make_vec_env
 from gymnasium.wrappers import TimeLimit
 from stable_baselines3.common.vec_env import VecMonitor
 
-
 from utils import make_env, visualize
-import highway_env  # noqa
 
 # ========== Paramètres ==========
 TASK_IDX = 3  # merge-v0
