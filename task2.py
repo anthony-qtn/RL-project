@@ -47,7 +47,7 @@ class ReplayBuffer:
 
 
 class Actor(nn.Module):
-    def __init__(self):
+    def __init__(self, *, deterministic=False):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(STATE_DIM, 256),
@@ -57,14 +57,16 @@ class Actor(nn.Module):
             nn.Linear(256, 2),
             nn.Tanh(),
         )
+        self.deterministic = deterministic
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x.flatten(start_dim=1))
 
-    def get_optimal_action(self, obs, gaussian=True) -> torch.Tensor:
+    @torch.no_grad()
+    def get_optimal_action(self, obs) -> torch.Tensor:
         obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
-        action = self.forward(obs_tensor).detach().numpy()[0]
-        if gaussian:
+        action = self.forward(obs_tensor).numpy()[0]
+        if not self.deterministic:
             action += EXPL_NOISE * np.random.randn(2)
         return np.clip(action, -1, 1)
 
@@ -201,8 +203,8 @@ def train():
 
 
 def test():
-    actor = Actor()
-    actor.load_state_dict(torch.load("task2/saved/actor.pth"))
+    actor = Actor(deterministic=True)
+    actor.load_state_dict(torch.load("task2/actor.pth"))
 
     visualize(actor, task_idx=2, create_gif=True)
 
