@@ -50,6 +50,7 @@ agent = DQN(action_space = env.action_space,
              )
 
 model_path = get_latest_model_path()
+model_path = "task1/models/model4.pt"
 
 print("evaluating model at ", model_path)
 

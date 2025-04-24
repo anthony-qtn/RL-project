@@ -21,8 +21,8 @@ LOGGING = True
 
 hyperparameters = {
     "gamma": 0.95,
-    "batch_size": 32,
-    "buffer_capacity": 15000,
+    "batch_size": 1,
+    "buffer_capacity": 1,
     "update_target_every": 50,
     "epsilon_start": 0.9,
     "decrease_epsilon_factor": 4000,
@@ -66,7 +66,6 @@ def train_agent(agent:DQN, env, N_episodes = hyperparameters["N_episodes"], eval
         state, _ = env.reset()
         done = False
         episode_loss = 0
-        example = (0, 0, 0, 0, 0)
         while not done:
             action = agent.get_action(state)
             next_state, reward, terminated, truncated, _ = env.step(action)
