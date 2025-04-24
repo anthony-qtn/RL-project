@@ -29,6 +29,7 @@ config_dict = {
     },
     "simulation_frequency": 16,  # Simulation frequency in Hz
     "policy_frequency": 4,  # Policy frequency in Hz
+    "duration": 60,  # Duration of the simulation in seconds
     "other_vehicles_type": "highway_env.vehicle.behavior.IDMVehicle",
     "screen_width": 600,  # Width of the screen for rendering
     "screen_height": 150,  # Height of the screen for rendering
