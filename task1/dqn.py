@@ -50,6 +50,7 @@ class DQN:
                 epsilon_min,
                 learning_rate,
                 hidden_size,
+                clip_threshold=1.0,
                 ): 
         self.action_space = action_space
         self.observation_space = observation_space
@@ -66,6 +67,10 @@ class DQN:
         self.learning_rate = learning_rate
 
         self.hidden_size = hidden_size
+
+        self.clip_threshold = clip_threshold
+        self.clipped_count = 0
+        self.clippable_count = 0
         
         self.reset()
         
@@ -127,6 +132,16 @@ class DQN:
         
         self.optimizer.zero_grad()
         loss.backward()
+        
+        # Gradient clipping with counter
+        total_norm = torch.nn.utils.clip_grad_norm_(
+            self.q_net.parameters(),
+            max_norm=self.clip_threshold,  # Set this in __init__ (e.g., 1.0)
+            norm_type=2
+        )
+        self.clipped_count += int(total_norm > self.clip_threshold)
+        self.clippable_count += 1
+        
         self.optimizer.step()
         
         if self.n_steps % self.update_target_every == 0:

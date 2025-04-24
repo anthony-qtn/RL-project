@@ -31,6 +31,7 @@ hyperparameters = {
     "N_episodes": 4000,
     "hidden_size": 128,
     "eval_every": 10,
+    "clip_threshold": 1.0,
 }
 
 def eval_agent(agent: DQN, env, n_sim=5) -> np.ndarray:
@@ -115,6 +116,7 @@ if __name__ == "__main__":
              epsilon_min = hyperparameters["epsilon_min"],
              learning_rate = hyperparameters["learning_rate"],
              hidden_size = hyperparameters["hidden_size"],
+             clip_threshold = hyperparameters["clip_threshold"],
              )
     
     get_next_model_path = get_next_model_path()
@@ -125,5 +127,9 @@ if __name__ == "__main__":
 
     agent.save_model(path = get_next_model_path)
 
+    clipped_proportion = agent.clipped_count / agent.clippable_count
+    print(f"Clipped proportion: {clipped_proportion}")
+
     if LOGGING:
+        mlflow.log_metric("gradient_clipping_proportion", clipped_proportion)
         mlflow.end_run()
