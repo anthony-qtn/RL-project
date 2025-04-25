@@ -12,8 +12,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-*.pkl
-
 # C extensions
 *.so
 
@@ -189,10 +187,6 @@ envRL/
 
 # logging
 mlruns/
-
-config.pkl
-config2.pkl
-config3.pkl
 
 #models
 task1/models/
